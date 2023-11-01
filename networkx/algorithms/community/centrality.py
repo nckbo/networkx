@@ -1,3 +1,6 @@
+from tqdm import tqdm
+
+
 """Functions for computing communities based on centrality notions."""
 
 import networkx as nx
@@ -144,7 +147,9 @@ def girvan_newman(G, most_valuable_edge=None):
     # Self-loops must be removed because their removal has no effect on
     # the connected components of the graph.
     g.remove_edges_from(nx.selfloop_edges(g))
-    while g.number_of_edges() > 0:
+    for _ in tqdm(len(G.nodes), desc="Partitions", dynamic_ncols=True):
+        if g.number_of_edges() == 0:
+            break
         yield _without_most_central_edges(g, most_valuable_edge)
 
 
@@ -163,7 +168,9 @@ def _without_most_central_edges(G, most_valuable_edge):
     """
     original_num_components = nx.number_connected_components(G)
     num_new_components = original_num_components
-    while num_new_components <= original_num_components:
+    for _ in tqdm(range(G.number_of_edges()), desc="Edges", leave=False, dynamic_ncols=True):
+        if num_new_components > original_num_components:
+            break
         edge = most_valuable_edge(G)
         G.remove_edge(*edge)
         new_components = tuple(nx.connected_components(G))
